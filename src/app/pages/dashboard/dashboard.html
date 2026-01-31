@@ -12,7 +12,7 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a routerLink="/dashboard" class="nav-item active">
+      <a routerLink="/" class="nav-item active">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect width="7" height="9" x="3" y="3" rx="1"/>
           <rect width="7" height="5" x="14" y="3" rx="1"/>
@@ -47,7 +47,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <div class="user-info">
+      <div class="user-info" style="display: none;">
         <img [src]="authService.user().avatar" alt="Avatar" class="user-avatar" />
         <div class="user-details">
           <span class="user-name">{{ authService.user().name }}</span>
@@ -86,73 +86,10 @@
       </div>
     </header>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon pending">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ pendingCount() }}</span>
-          <span class="stat-label">Pending</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon progress">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 20h9"/>
-            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ inProgressCount() }}</span>
-          <span class="stat-label">In Progress</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon reviewed">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ reviewedCount() }}</span>
-          <span class="stat-label">Reviewed</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon completed">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ completedCount() }}</span>
-          <span class="stat-label">Completed</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Cases List -->
     <div class="cases-section">
       <div class="section-header">
         <h2>Recent Cases</h2>
-        <div class="filter-tabs">
-          @for (tab of filterTabs; track tab.value) {
-            <button
-              [class.active]="activeFilter() === tab.value"
-              class="filter-tab"
-              (click)="setFilter(tab.value)"
-            >
-              {{ tab.label }}
-            </button>
-          }
-        </div>
       </div>
 
       <div class="cases-grid">

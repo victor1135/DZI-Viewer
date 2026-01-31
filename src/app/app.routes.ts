@@ -1,12 +1,11 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  // 首頁
+  // Dashboard (首頁直接導向dashboard)
   {
     path: '',
-    loadComponent: () => import('./pages/home/home').then(m => m.Home)
+    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
   },
-  // Dashboard
   {
     path: 'dashboard',
     loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.Dashboard)
