@@ -1,0 +1,540 @@
+// ============================================================
+// Upload 頁面樣式 (從 Vue 轉換)
+// ============================================================
+
+// 變數定義
+$oxford-blue: #002147;
+$oxford-light: #0a3d62;
+$oxford-gold: #b8860b;
+$bg-primary: #0d1117;
+$bg-secondary: #161b22;
+$bg-tertiary: #21262d;
+$text-primary: #f0f6fc;
+$text-secondary: #8b949e;
+$border-color: #30363d;
+
+.upload-container {
+  min-height: 100vh;
+  background: $bg-primary;
+  padding: 2rem;
+}
+
+.upload-header {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+
+  h1 {
+    font-size: 2rem;
+    color: $text-primary;
+    margin: 1rem 0 0.25rem;
+  }
+
+  .subtitle {
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: $text-secondary;
+  text-decoration: none;
+  font-size: 0.9rem;
+
+  &:hover {
+    color: $text-primary;
+  }
+}
+
+.upload-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.5rem;
+}
+
+.upload-section {
+  grid-row: span 2;
+}
+
+.upload-dropzone {
+  border: 2px dashed $border-color;
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: $bg-secondary;
+
+  &:hover,
+  &.drag-over {
+    border-color: $oxford-gold;
+    background: rgba($oxford-gold, 0.05);
+  }
+
+  &.has-files {
+    padding: 1.5rem;
+  }
+}
+
+.dropzone-content {
+  .upload-icon {
+    color: $text-secondary;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    color: $text-primary;
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  p {
+    color: $text-secondary;
+    margin: 0 0 1.5rem;
+  }
+}
+
+.supported-formats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  span {
+    color: $text-secondary;
+    font-size: 0.85rem;
+  }
+
+  code {
+    background: $bg-tertiary;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: $oxford-gold;
+  }
+}
+
+// Upload Mode Selector
+.upload-mode-selector {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: $bg-secondary;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+
+  .mode-label {
+    display: block;
+    color: $text-primary;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+
+  .mode-options {
+    display: flex;
+    gap: 1rem;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+
+  .mode-option {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem;
+    background: $bg-tertiary;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    input {
+      display: none;
+    }
+
+    &:hover {
+      background: mix($oxford-blue, $bg-tertiary, 10%);
+    }
+
+    &.active {
+      border-color: $oxford-blue;
+      background: mix($oxford-blue, $bg-tertiary, 15%);
+    }
+
+    .mode-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .mode-title {
+      color: $text-primary;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .mode-desc {
+      color: $text-secondary;
+      font-size: 0.8rem;
+    }
+  }
+
+  .mode-hint {
+    margin-top: 1rem;
+    margin-bottom: 0;
+    padding: 0.75rem;
+    background: mix($oxford-gold, $bg-tertiary, 15%);
+    border-radius: 6px;
+    color: $oxford-gold;
+    font-size: 0.85rem;
+
+    code {
+      background: $bg-tertiary;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.upload-queue {
+  margin-top: 1.5rem;
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  h3 {
+    color: $text-primary;
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.queue-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.clear-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  color: $text-secondary;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: $text-secondary;
+    color: $text-primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: $oxford-blue;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $oxford-light;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .uploading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: $bg-tertiary;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+
+  &.completed {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.05);
+  }
+
+  &.error {
+    border-color: #f85149;
+    background: rgba(248, 81, 73, 0.05);
+  }
+}
+
+.file-icon {
+  color: $text-secondary;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+
+  .file-name {
+    display: block;
+    color: $text-primary;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .file-size {
+    font-size: 0.75rem;
+    color: $text-secondary;
+  }
+}
+
+.file-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 120px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: $border-color;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: $oxford-gold;
+  transition: width 0.3s;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: $text-secondary;
+  min-width: 35px;
+}
+
+.file-status {
+  min-width: 100px;
+  text-align: right;
+
+  span {
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .status-pending { color: $text-secondary; }
+  .status-uploading { color: #38bdf8; }
+  .status-processing { color: #a855f7; }
+  .status-completed { color: #22c55e; }
+  .status-error { color: #f85149; }
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: $text-secondary;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+
+  &:hover:not(:disabled) {
+    color: #f85149;
+    background: rgba(248, 81, 73, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.assignment-section,
+.storage-section {
+  background: $bg-secondary;
+  border: 1px solid $border-color;
+  border-radius: 12px;
+  padding: 1.5rem;
+
+  h3 {
+    color: $text-primary;
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+
+  .section-desc {
+    color: $text-secondary;
+    font-size: 0.85rem;
+    margin: 0 0 1.5rem;
+  }
+}
+
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: $text-secondary;
+    margin-bottom: 0.5rem;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background: $bg-tertiary;
+    border: 1px solid $border-color;
+    border-radius: 6px;
+    color: $text-primary;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: $oxford-blue;
+    }
+
+    &::placeholder {
+      color: $text-secondary;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+}
+
+.toggle-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: $bg-tertiary;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  color: $text-secondary;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: $text-secondary;
+  }
+
+  &.active {
+    background: rgba($oxford-blue, 0.2);
+    border-color: $oxford-blue;
+    color: $text-primary;
+  }
+}
+
+.storage-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: $bg-tertiary;
+  border-radius: 8px;
+}
+
+.storage-provider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .provider-icon {
+    font-size: 1.5rem;
+  }
+
+  .provider-name {
+    color: $text-primary;
+    font-size: 0.9rem;
+  }
+}
+
+.storage-status {
+  font-size: 0.85rem;
+  color: #f85149;
+
+  &.connected {
+    color: #22c55e;
+  }
+}
+
+.configure-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: $oxford-gold;
+  text-decoration: none;
+  font-size: 0.9rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+@media (max-width: 900px) {
+  .upload-content {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-section {
+    grid-row: auto;
+  }
+}

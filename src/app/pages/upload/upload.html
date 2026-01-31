@@ -1,0 +1,270 @@
+<div class="upload-container">
+  <header class="upload-header">
+    <a routerLink="/dashboard" class="back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m12 19-7-7 7-7"/>
+        <path d="M19 12H5"/>
+      </svg>
+      Back to Dashboard
+    </a>
+    <h1 class="font-serif">Upload Slides</h1>
+    <p class="subtitle">Upload whole slide images to cloud storage</p>
+  </header>
+
+  <div class="upload-content">
+    <!-- Upload Area -->
+    <div class="upload-section">
+      <div
+        class="upload-dropzone"
+        [class.drag-over]="isDragging()"
+        [class.has-files]="uploadQueue().length > 0"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="triggerFileInput()"
+      >
+        <input
+          #fileInput
+          type="file"
+          multiple
+          accept=".svs,.tiff,.tif,.ndpi,.mrxs,.vms,.vmu,.scn,.bif"
+          (change)="handleFileSelect($event)"
+          hidden
+        />
+
+        @if (uploadQueue().length === 0) {
+          <div class="dropzone-content">
+            <div class="upload-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <h3>Drag & drop slide files here</h3>
+            <p>or click to browse</p>
+            <div class="supported-formats">
+              <span>Supported formats:</span>
+              <code>.svs</code>
+              <code>.tiff</code>
+              <code>.ndpi</code>
+              <code>.mrxs</code>
+              <code>.scn</code>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Upload Mode Selection -->
+      @if (uploadQueue().length > 0) {
+        <div class="upload-mode-selector">
+          <label class="mode-label">Upload Mode:</label>
+          <div class="mode-options">
+            <label class="mode-option" [class.active]="uploadMode() === 'backend'">
+              <input type="radio" [checked]="uploadMode() === 'backend'" (change)="uploadMode.set('backend')" />
+              <div class="mode-content">
+                <span class="mode-title">Backend Processing (Recommended)</span>
+                <span class="mode-desc">Upload -> Convert to DZI -> Store in Cloud</span>
+              </div>
+            </label>
+            <label class="mode-option" [class.active]="uploadMode() === 'direct'">
+              <input type="radio" [checked]="uploadMode() === 'direct'" (change)="uploadMode.set('direct')" />
+              <div class="mode-content">
+                <span class="mode-title">Direct Upload</span>
+                <span class="mode-desc">Upload raw file to S3/OSS (no conversion)</span>
+              </div>
+            </label>
+          </div>
+          @if (uploadMode() === 'backend') {
+            <p class="mode-hint">
+              Make sure the Python backend is running at <code>{{ BACKEND_URL }}</code>
+            </p>
+          }
+        </div>
+      }
+
+      <!-- Upload Queue -->
+      @if (uploadQueue().length > 0) {
+        <div class="upload-queue">
+          <div class="queue-header">
+            <h3>Upload Queue ({{ uploadQueue().length }} files)</h3>
+            <div class="queue-actions">
+              <button class="clear-btn" (click)="clearQueue()" [disabled]="isUploading()">
+                Clear All
+              </button>
+              <button class="upload-btn" (click)="startUpload()" [disabled]="isUploading()">
+                @if (!isUploading()) {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Start Upload
+                } @else {
+                  <span class="uploading">
+                    <div class="spinner"></div>
+                    Uploading...
+                  </span>
+                }
+              </button>
+            </div>
+          </div>
+
+          <div class="queue-list">
+            @for (file of uploadQueue(); track $index; let i = $index) {
+              <div class="queue-item" [class]="file.status">
+                <div class="file-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <rect x="8" y="12" width="8" height="6" rx="1"/>
+                  </svg>
+                </div>
+                <div class="file-info">
+                  <span class="file-name">{{ file.name }}</span>
+                  <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                </div>
+                @if (file.status === 'uploading') {
+                  <div class="file-progress">
+                    <div class="progress-bar">
+                      <div class="progress-fill" [style.width.%]="file.progress"></div>
+                    </div>
+                    <span class="progress-text">{{ file.progress }}%</span>
+                  </div>
+                }
+                <div class="file-status">
+                  @switch (file.status) {
+                    @case ('pending') {
+                      <span class="status-pending">Pending</span>
+                    }
+                    @case ('uploading') {
+                      <span class="status-uploading">Uploading</span>
+                    }
+                    @case ('processing') {
+                      <span class="status-processing">Processing</span>
+                    }
+                    @case ('completed') {
+                      <span class="status-completed">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Completed
+                      </span>
+                    }
+                    @case ('error') {
+                      <span class="status-error">Failed</span>
+                    }
+                  }
+                </div>
+                <button class="remove-btn" (click)="removeFromQueue(i)" [disabled]="file.status === 'uploading'">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Case Assignment -->
+    <div class="assignment-section">
+      <h3>Case Assignment</h3>
+      <p class="section-desc">Assign uploaded slides to a case</p>
+
+      <div class="form-group">
+        <label>Create New Case or Select Existing</label>
+        <div class="toggle-group">
+          <button
+            class="toggle-btn"
+            [class.active]="assignmentMode() === 'new'"
+            (click)="setAssignmentMode('new')"
+          >
+            Create New Case
+          </button>
+          <button
+            class="toggle-btn"
+            [class.active]="assignmentMode() === 'existing'"
+            (click)="setAssignmentMode('existing')"
+          >
+            Existing Case
+          </button>
+        </div>
+      </div>
+
+      @if (assignmentMode() === 'new') {
+        <div class="form-group">
+          <label>Patient ID</label>
+          <input type="text" [(ngModel)]="newCase.patientId" placeholder="P-XXXXX" />
+        </div>
+        <div class="form-group">
+          <label>Specimen Type</label>
+          <select [(ngModel)]="newCase.specimenType">
+            <option value="">Select specimen type...</option>
+            <option value="Tissue Biopsy">Tissue Biopsy</option>
+            <option value="Excisional Biopsy">Excisional Biopsy</option>
+            <option value="Core Needle Biopsy">Core Needle Biopsy</option>
+            <option value="Fine Needle Aspiration">Fine Needle Aspiration</option>
+            <option value="Resection">Resection</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sample Site</label>
+          <input type="text" [(ngModel)]="newCase.sampleSite" placeholder="e.g., Liver - Right Lobe" />
+        </div>
+        <div class="form-group">
+          <label>Clinical History</label>
+          <textarea
+            [(ngModel)]="newCase.clinicalHistory"
+            placeholder="Enter relevant clinical history..."
+            rows="4"
+          ></textarea>
+        </div>
+      } @else {
+        <div class="form-group">
+          <label>Select Case</label>
+          <select [ngModel]="selectedCaseId()" (ngModelChange)="selectedCaseId.set($event)">
+            <option value="">Select a case...</option>
+            @for (c of existingCases(); track c.id) {
+              <option [value]="c.id">{{ c.caseNumber }} - {{ c.specimenType }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <div class="form-group">
+        <label>Stain Type</label>
+        <select [ngModel]="stainType()" (ngModelChange)="stainType.set($event)">
+          <option value="H&E">H&E (Hematoxylin & Eosin)</option>
+          <option value="IHC">Immunohistochemistry</option>
+          <option value="PAS">PAS (Periodic Acid-Schiff)</option>
+          <option value="Masson">Masson's Trichrome</option>
+          <option value="Silver">Silver Stain</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Storage Info -->
+    <div class="storage-section">
+      <h3>Storage Configuration</h3>
+      <div class="storage-info">
+        <div class="storage-provider">
+          <span class="provider-icon">{{ storageService.provider() === 'oss' ? 'CN' : 'US' }}</span>
+          <span class="provider-name">
+            {{ storageService.provider() === 'oss' ? 'Alibaba Cloud OSS' : 'Amazon S3' }}
+          </span>
+        </div>
+        <div class="storage-status" [class.connected]="storageService.isConfigured()">
+          {{ storageService.isConfigured() ? 'Connected' : 'Not Configured' }}
+        </div>
+      </div>
+      @if (!storageService.isConfigured()) {
+        <a routerLink="/settings" class="configure-link">
+          Configure Storage
+        </a>
+      }
+    </div>
+  </div>
+</div>

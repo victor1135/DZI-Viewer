@@ -1,0 +1,254 @@
+<div class="viewer-container">
+  <!-- Left Sidebar -->
+  <aside class="left-sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+      <button class="back-btn" (click)="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m12 19-7-7 7-7"/>
+          <path d="M19 12H5"/>
+        </svg>
+      </button>
+      @if (currentCase(); as caseData) {
+        <div class="case-badge">
+          <span class="case-number">{{ caseData.caseNumber }}</span>
+          <span class="status-dot" [class]="caseData.status"></span>
+        </div>
+      }
+    </div>
+
+    <!-- Slide Thumbnails -->
+    <div class="slides-panel">
+      <h3>Slides</h3>
+      @if (currentCase(); as caseData) {
+        <div class="slides-list">
+          @for (slide of caseData.slides; track slide.id) {
+            <div
+              class="slide-thumb"
+              [class.active]="currentSlide()?.id === slide.id"
+              (click)="selectSlide(slide)"
+            >
+              <img [src]="slide.thumbnailUrl" [alt]="slide.name" />
+              <div class="slide-info">
+                <span class="slide-name">{{ slide.name }}</span>
+                <span class="slide-stain">{{ slide.stainType }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Tools -->
+    <div class="tools-panel">
+      <h3>Tools</h3>
+      <div class="tool-buttons">
+        <button
+          class="tool-btn"
+          [class.active]="activeTool() === 'pan'"
+          (click)="setTool('pan')"
+          title="Pan"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+          </svg>
+        </button>
+        <button
+          class="tool-btn"
+          [class.active]="activeTool() === 'measure'"
+          (click)="setTool('measure')"
+          title="畫圓標註 (點擊並拖拽畫圓)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+          </svg>
+        </button>
+        @if (activeTool() === 'measure') {
+          <button
+            class="tool-btn clear-btn"
+            (click)="clearAllAnnotations()"
+            title="清除所有標註"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        }
+        <button
+          class="tool-btn"
+          [class.active]="activeTool() === 'annotate'"
+          (click)="setTool('annotate')"
+          title="Annotate"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigator -->
+    <div class="navigator-panel">
+      <h3>Navigator</h3>
+      <div id="navigator-container" class="navigator-box"></div>
+    </div>
+  </aside>
+
+  <!-- Main Viewer -->
+  <main class="viewer-main">
+    <!-- Toolbar -->
+    <div class="viewer-toolbar">
+      <div class="toolbar-left">
+        @if (currentSlide(); as slide) {
+          <span class="slide-title">{{ slide.name }}</span>
+          <span class="slide-meta">{{ slide.stainType }} | {{ slide.width }} x {{ slide.height }} px</span>
+        }
+      </div>
+      <div class="toolbar-center">
+        <button class="toolbar-btn" (click)="zoomOut()" title="Zoom Out">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+            <path d="M8 11h6"/>
+          </svg>
+        </button>
+        <span class="zoom-level">{{ currentZoom() }}x</span>
+        <button class="toolbar-btn" (click)="zoomIn()" title="Zoom In">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+            <path d="M11 8v6"/>
+            <path d="M8 11h6"/>
+          </svg>
+        </button>
+        <div class="toolbar-divider"></div>
+        <button class="toolbar-btn" (click)="resetView()" title="Reset View">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+        </button>
+        <button class="toolbar-btn" (click)="rotateLeft()" title="Rotate Left">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/>
+          </svg>
+        </button>
+        <button class="toolbar-btn" (click)="rotateRight()" title="Rotate Right">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+          </svg>
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <span class="coords">
+          X: {{ mouseCoords().x.toFixed(0) }} μm | Y: {{ mouseCoords().y.toFixed(0) }} μm
+        </span>
+      </div>
+    </div>
+
+    <!-- OpenSeadragon Container -->
+    <div #viewerContainer id="openseadragon-viewer" class="osd-container"></div>
+
+    <!-- Scale Bar -->
+    <div class="scale-bar">
+      <div class="scale-line" [style.width.px]="scaleBarWidth()"></div>
+      <span class="scale-label">{{ scaleBarLabel() }}</span>
+    </div>
+  </main>
+
+  <!-- Right Sidebar -->
+  <aside class="right-sidebar">
+    <!-- Tabs -->
+    <div class="sidebar-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'case'"
+        (click)="setTab('case')"
+      >
+        Case Info
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'diagnosis'"
+        (click)="setTab('diagnosis')"
+      >
+        Diagnosis
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      @if (activeTab() === 'case' && currentCase(); as caseData) {
+        <div class="case-details">
+          <div class="detail-group">
+            <label>Patient ID</label>
+            <span>{{ caseData.patientId }}</span>
+          </div>
+          <div class="detail-group">
+            <label>Specimen Type</label>
+            <span>{{ caseData.specimenType }}</span>
+          </div>
+          <div class="detail-group">
+            <label>Sample Site</label>
+            <span>{{ caseData.sampleSite }}</span>
+          </div>
+          <div class="detail-group">
+            <label>Clinical History</label>
+            <p class="clinical-history">{{ caseData.clinicalHistory }}</p>
+          </div>
+          @if (caseData.assignedTo) {
+            <div class="detail-group">
+              <label>Assigned To</label>
+              <span>{{ caseData.assignedTo }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      @if (activeTab() === 'diagnosis') {
+        <div class="diagnosis-panel">
+          @if (currentCase()?.diagnosis) {
+            <div class="existing-diagnosis">
+              <h4>Current Diagnosis</h4>
+              <p>{{ currentCase()?.diagnosis }}</p>
+              @if (currentCase()?.notes) {
+                <div class="notes">
+                  <h5>Notes</h5>
+                  <p>{{ currentCase()?.notes }}</p>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="diagnosis-form">
+              <div class="form-group">
+                <label>Diagnosis</label>
+                <textarea
+                  [ngModel]="diagnosisInput()"
+                  (ngModelChange)="diagnosisInput.set($event)"
+                  placeholder="Enter your diagnosis..."
+                  rows="4"
+                ></textarea>
+              </div>
+              <div class="form-group">
+                <label>Notes (Optional)</label>
+                <textarea
+                  [ngModel]="notesInput()"
+                  (ngModelChange)="notesInput.set($event)"
+                  placeholder="Additional notes or recommendations..."
+                  rows="3"
+                ></textarea>
+              </div>
+              <button class="save-btn" (click)="saveDiagnosis()">
+                Save Diagnosis
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </aside>
+</div>

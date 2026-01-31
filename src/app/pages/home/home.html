@@ -1,0 +1,121 @@
+<div class="home-container">
+    <!-- Animated background -->
+    <div class="background-pattern"></div>
+
+    <!-- Main content -->
+    <div class="content-wrapper">
+        <!-- Header -->
+        <header class="home-header">
+            <div class="logo-section">
+                <div class="oxford-crest">
+                    <svg viewBox="0 0 100 100" class="crest-icon">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" />
+                        <text x="50" y="58" text-anchor="middle" font-size="24" font-family="Crimson Pro"
+                            fill="currentColor">OX</text>
+                    </svg>
+                </div>
+                <div class="title-text">
+                    <h1 class="font-serif">Oxford Digital Pathology</h1>
+                    <p class="subtitle">Department of Pathology • Nuffield
+                        Division of Clinical Laboratory Sciences</p>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <a href="https://www.path.ox.ac.uk" target="_blank" rel="noopener">Research</a>
+                <a href="#about">About</a>
+
+                <!--
+  ============================================================ -->
+                <!-- 路由連結轉換
+           -->
+                <!-- Vue:     <router-link to="/dashboard"
+  class="login-btn">     -->
+                <!-- Angular: <a routerLink="/dashboard"
+  class="login-btn">       -->
+                <!--
+  ============================================================ -->
+                <a routerLink="/dashboard" class="login-btn">Open Viewer</a>
+            </nav>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content animate-slide-up">
+                <h2 class="hero-title font-serif">
+                    Digital Pathology <br />
+                    <span class="accent">Slide Viewer</span>
+                </h2>
+                <p class="hero-description">
+                    A high-performance web-based platform for viewing and
+                    analysing whole slide images.
+                    Designed in collaboration with Oxford University
+                    pathologists for research and diagnostic workflows.
+                </p>
+                <div class="hero-actions">
+                    <!-- 路由連結 -->
+                    <a routerLink="/dashboard" class="primary-btn">
+                        <span>Access Viewer</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                    <a href="#features" class="secondary-btn">Learn More</a>
+                </div>
+            </div>
+
+            <div class="hero-visual animate-fade-in" style="animation-delay: 0.3s">
+                <div class="viewer-preview">
+                    <div class="preview-header">
+                        <div class="preview-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="preview-title">Slide Viewer</span>
+                    </div>
+                    <div class="preview-content">
+                        <img src="https://openslide.cs.cmu.edu/download/openslide
+  -testdata/Aperio/CMU-1-Small-Region.svs.thumbnail.png" alt="Pathology slide preview" class="preview-image" />
+                        <div class="preview-overlay">
+                            <div class="zoom-indicator">40×</div>
+                            <div class="scale-bar">
+                                <div class="scale-line"></div>
+                                <span>100 μm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section">
+            <h3 class="section-title font-serif">Key Features</h3>
+            <div class="features-grid">
+                @for (feature of features; track $index) {
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img [src]="feature.icon" alt="Feature Icon" />
+                    </div>
+
+                    <!-- 文字插值（相同） -->
+                    <h4>{{ feature.title }}</h4>
+                    <p>{{ feature.description }}</p>
+                </div>
+                }
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="home-footer">
+            <div class="footer-content">
+                <p>© 2024 University of Oxford. Digital Pathology
+                    Research Project.</p>
+                <p class="footer-note">
+                    Built with OpenSeadragon • Cloud storage via AWS S3 /
+                    Alibaba OSS
+                </p>
+            </div>
+        </footer>
+    </div>
+</div>

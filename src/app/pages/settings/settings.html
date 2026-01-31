@@ -1,0 +1,191 @@
+<div class="settings-container">
+  <header class="settings-header">
+    <a routerLink="/dashboard" class="back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m12 19-7-7 7-7"/>
+        <path d="M19 12H5"/>
+      </svg>
+      Back to Dashboard
+    </a>
+    <h1 class="font-serif">Settings</h1>
+  </header>
+
+  <div class="settings-content">
+    <!-- Cloud Storage Section -->
+    <section class="settings-section">
+      <h2>Cloud Storage Configuration</h2>
+      <p class="section-desc">Configure your cloud storage provider for slide image access.</p>
+
+      <div class="provider-tabs">
+        <button
+          class="provider-tab"
+          [class.active]="storageProvider() === 'oss'"
+          (click)="setProvider('oss')"
+        >
+          <span class="provider-icon">CN</span>
+          Alibaba Cloud OSS
+        </button>
+        <button
+          class="provider-tab"
+          [class.active]="storageProvider() === 's3'"
+          (click)="setProvider('s3')"
+        >
+          <span class="provider-icon">US</span>
+          Amazon S3
+        </button>
+      </div>
+
+      <div class="config-form">
+        @if (storageProvider() === 'oss') {
+          <div class="form-group">
+            <label>Region</label>
+            <input type="text" [(ngModel)]="ossConfig.region" placeholder="oss-cn-hangzhou" />
+          </div>
+          <div class="form-group">
+            <label>Endpoint</label>
+            <input type="text" [(ngModel)]="ossConfig.endpoint" placeholder="oss-cn-hangzhou.aliyuncs.com" />
+          </div>
+          <div class="form-group">
+            <label>Bucket Name</label>
+            <input type="text" [(ngModel)]="ossConfig.bucket" placeholder="your-bucket-name" />
+          </div>
+          <div class="form-group">
+            <label>Access Key ID</label>
+            <input type="password" [(ngModel)]="ossConfig.accessKeyId" placeholder="Your Access Key ID" />
+          </div>
+          <div class="form-group">
+            <label>Access Key Secret</label>
+            <input type="password" [(ngModel)]="ossConfig.accessKeySecret" placeholder="Your Access Key Secret" />
+          </div>
+        } @else {
+          <div class="form-group">
+            <label>AWS Region</label>
+            <input type="text" [(ngModel)]="s3Config.region" placeholder="eu-west-2" />
+          </div>
+          <div class="form-group">
+            <label>Bucket Name</label>
+            <input type="text" [(ngModel)]="s3Config.bucket" placeholder="your-bucket-name" />
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="s3Config.isPublic" />
+              <span>Public Bucket (no credentials required)</span>
+            </label>
+          </div>
+          @if (!s3Config.isPublic) {
+            <div class="form-group">
+              <label>Access Key ID</label>
+              <input type="password" [(ngModel)]="s3Config.accessKeyId" placeholder="Your AWS Access Key ID" />
+            </div>
+            <div class="form-group">
+              <label>Secret Access Key</label>
+              <input type="password" [(ngModel)]="s3Config.secretAccessKey" placeholder="Your AWS Secret Access Key" />
+            </div>
+          }
+        }
+
+        <div class="form-actions">
+          <button class="test-btn" (click)="testConnection()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            Test Connection
+          </button>
+          <button class="save-btn" (click)="saveConfig()">Save Configuration</button>
+        </div>
+
+        @if (connectionStatus(); as status) {
+          <div class="status-message" [class]="status.type">
+            {{ status.message }}
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Viewer Preferences -->
+    <section class="settings-section">
+      <h2>Viewer Preferences</h2>
+      <p class="section-desc">Customize your slide viewing experience.</p>
+
+      <div class="preferences-grid">
+        <div class="preference-item">
+          <div class="preference-info">
+            <span class="preference-label">Show Navigator</span>
+            <span class="preference-desc">Display mini-map in corner</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="preferences.showNavigator" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-info">
+            <span class="preference-label">Show Scale Bar</span>
+            <span class="preference-desc">Display measurement scale</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="preferences.showScaleBar" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-info">
+            <span class="preference-label">Smooth Zoom</span>
+            <span class="preference-desc">Enable zoom animations</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="preferences.smoothZoom" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-info">
+            <span class="preference-label">Default Zoom Level</span>
+            <span class="preference-desc">Initial magnification</span>
+          </div>
+          <select [(ngModel)]="preferences.defaultZoom">
+            <option value="fit">Fit to Screen</option>
+            <option value="1">1x</option>
+            <option value="5">5x</option>
+            <option value="10">10x</option>
+            <option value="20">20x</option>
+            <option value="40">40x</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="settings-section about-section">
+      <h2>About</h2>
+      <div class="about-content">
+        <div class="about-logo">
+          <svg viewBox="0 0 80 80" class="oxford-crest">
+            <circle cx="40" cy="40" r="36" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="40" y="48" text-anchor="middle" font-size="24" font-family="Crimson Pro" fill="currentColor">OX</text>
+          </svg>
+        </div>
+        <div class="about-text">
+          <h3 class="font-serif">Oxford Digital Pathology Viewer</h3>
+          <p>Version 1.0.0</p>
+          <p class="about-desc">
+            Developed in collaboration with the University of Oxford Department of Pathology.
+            This application enables high-performance viewing and analysis of whole slide images
+            stored on cloud platforms.
+          </p>
+          <div class="tech-stack">
+            <span>Angular 19</span>
+            <span>OpenSeadragon</span>
+            <span>TypeScript</span>
+            <span>Alibaba OSS</span>
+            <span>AWS S3</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
