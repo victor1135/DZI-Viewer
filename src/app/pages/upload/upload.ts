@@ -22,7 +22,8 @@ export class Upload implements OnDestroy {
 
   // 後端 API 地址
   //readonly BACKEND_URL = 'https://dzi-conversion-production.up.railway.app';
-  readonly BACKEND_URL_LOCAL = 'http://localhost:8001';
+  //readonly BACKEND_URL_LOCAL = 'http://localhost:8001';
+  readonly BACKEND_URL_LOCAL = 'https://dzi-conversion-production.up.railway.app';
 
   // 上傳模式: direct (直接到S3) 或 backend (通過後端轉DZI)
   uploadMode = signal<'direct' | 'backend'>('backend');
