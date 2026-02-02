@@ -27,6 +27,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "chunk-upload.worker.js",
+                "input": "src/app/workers",
+                "output": "/workers"
               }
             ],
             "styles": [

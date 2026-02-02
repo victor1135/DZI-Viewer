@@ -11,6 +11,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CasesService } from '../../services/cases.service';
+import { MemoryManagerService } from '../../services/memory-manager.service';
 import { SlideImage, PathologyCase } from '../../models';
 
 // OpenSeadragon 類型宣告
@@ -31,7 +32,7 @@ export class SlideViewer implements OnInit, OnDestroy, AfterViewInit {
   private mouseTracker: any = null;
   currentSlide = signal<SlideImage | null>(null);
   activeTool = signal<'pan' | 'measure' | 'annotate'>('pan');
-  activeTab = signal<'case' | 'diagnosis'>('case');
+  activeTab = signal<'case' | 'diagnosis' | 'performance'>('case');
   currentZoom = signal('1.0');
   rotation = signal(0);
   diagnosisInput = signal('');
@@ -61,7 +62,8 @@ export class SlideViewer implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    public casesService: CasesService
+    public casesService: CasesService,
+    private memoryManager: MemoryManagerService
   ) {}
 
   // 當前案例
@@ -93,6 +95,10 @@ export class SlideViewer implements OnInit, OnDestroy, AfterViewInit {
       this.mouseTracker.destroy();
       this.mouseTracker = null;
     }
+    
+    // 清理内存
+    this.memoryManager.forceCleanup();
+    this.memoryManager.reset();
     
     if (this.viewer) {
       this.viewer.destroy();
@@ -151,7 +157,14 @@ export class SlideViewer implements OnInit, OnDestroy, AfterViewInit {
       minZoomLevel: 0.5,
       maxZoomLevel: 40,
       visibilityRatio: 0.5,
-      constrainDuringPan: true
+      constrainDuringPan: true,
+      // 内存优化配置
+      maxImageCacheCount: 2000, // 最大缓存 tile 数量
+      imageLoaderLimit: 6, // 并发加载限制
+      maxPixelRatio: 2, // 限制高 DPI 屏幕的像素比
+      timeout: 30000, // 30 秒超时
+      loadTilesWithAjax: false, // 使用标准图片加载
+      ajaxWithCredentials: false
     });
 
     // 追蹤縮放級別
@@ -216,6 +229,19 @@ export class SlideViewer implements OnInit, OnDestroy, AfterViewInit {
       if (!this.scaleBarWidth() || this.scaleBarWidth() === 100) {
         setTimeout(() => this.updateScaleBar(), 50);
       }
+    });
+
+    // 设置内存管理器
+    this.memoryManager.setViewer(this.viewer);
+
+    // 监听视口变化，定期清理内存
+    this.viewer.addHandler('viewport-change', () => {
+      // 延迟清理，避免频繁触发
+      setTimeout(() => {
+        if (this.memoryManager.needsCleanup()) {
+          this.memoryManager.cleanupMemory();
+        }
+      }, 1000);
     });
   }
 
@@ -739,6 +765,38 @@ export class SlideViewer implements OnInit, OnDestroy, AfterViewInit {
     this.router.navigate(['/dashboard']);
   }
 
+  // 清理内存
+  cleanupMemory(): void {
+    this.memoryManager.cleanupMemory();
+  }
+
+  // 强制清理内存
+  forceCleanupMemory(): void {
+    this.memoryManager.forceCleanup();
+  }
+
+  // 获取内存统计（用于模板）
+  get memoryStats() {
+    return this.memoryManager.memoryStats();
+  }
+
+  // 获取内存建议
+  get memoryAdvice() {
+    return this.memoryManager.getMemoryAdvice();
+  }
+
+  // 是否显示内存警告
+  get showMemoryWarning() {
+    return this.memoryManager.isWarningThreshold();
+  }
+
+  // 格式化清理时间
+  formatCleanupTime(date: Date | null): string {
+    if (!date) return 'Never';
+    const d = new Date(date);
+    return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
   // 儲存診斷
   saveDiagnosis(): void {
     const currentCase = this.currentCase();
@@ -753,7 +811,7 @@ export class SlideViewer implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // 設定 Tab
-  setTab(tab: 'case' | 'diagnosis'): void {
+  setTab(tab: 'case' | 'diagnosis' | 'performance'): void {
     this.activeTab.set(tab);
   }
 }

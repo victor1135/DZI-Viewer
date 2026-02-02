@@ -1,9 +1,11 @@
-import { Component, signal, computed, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, computed, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StorageService } from '../../services/storage.service';
 import { CasesService } from '../../services/cases.service';
+import { ChunkUploadService } from '../../services/chunk-upload.service';
 import { UploadFile, PathologyCase } from '../../models';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-upload',
@@ -12,11 +14,15 @@ import { UploadFile, PathologyCase } from '../../models';
   templateUrl: './upload.html',
   styleUrl: './upload.scss',
 })
-export class Upload {
+export class Upload implements OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
+  // Web Worker 上传订阅
+  private uploadSubscriptions: Subscription[] = [];
+
   // 後端 API 地址
-  readonly BACKEND_URL = ' https://dzi-conversion-production.up.railway.app';
+  //readonly BACKEND_URL = 'https://dzi-conversion-production.up.railway.app';
+  readonly BACKEND_URL_LOCAL = 'http://localhost:8001';
 
   // 上傳模式: direct (直接到S3) 或 backend (通過後端轉DZI)
   uploadMode = signal<'direct' | 'backend'>('backend');
@@ -43,8 +49,17 @@ export class Upload {
 
   constructor(
     public storageService: StorageService,
-    public casesService: CasesService
+    public casesService: CasesService,
+    private chunkUploadService: ChunkUploadService
   ) {}
+
+  ngOnDestroy(): void {
+    // 取消所有上传
+    this.chunkUploadService.cancelUpload();
+    // 清理订阅
+    this.uploadSubscriptions.forEach(sub => sub.unsubscribe());
+    this.uploadSubscriptions = [];
+  }
 
   // 現有案例列表
   readonly existingCases = computed(() => this.casesService.cases());
@@ -144,46 +159,62 @@ export class Upload {
     this.isUploading.set(false);
   }
 
-  // 通過後端 API 上傳
+  // 通過後端 API 上傳（使用 Web Worker）
   private async uploadViaBackend(index: number): Promise<void> {
     this.updateItemStatus(index, 'uploading', 0);
 
     try {
       const item = this.uploadQueue()[index];
-      const formData = new FormData();
-      formData.append('file', item.file);
-      formData.append('provider', this.storageService.provider());
-      formData.append('bucket', this.storageService.provider() === 's3'
-        ? this.storageService.s3Config().bucket
-        : this.storageService.ossConfig().bucket);
-      formData.append('region', this.storageService.provider() === 's3'
-        ? this.storageService.s3Config().region
-        : this.storageService.ossConfig().region);
-
-      // 創建 AbortController 用於超時控制
-      const controller = new AbortController();
-      const uploadTimeout = setTimeout(() => controller.abort(), 10 * 60 * 1000); // 10分鐘上傳超時
-
-      const uploadResponse = await fetch(`${this.BACKEND_URL}/api/upload`, {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal
-      });
       
-      clearTimeout(uploadTimeout);
+      // 使用 Web Worker 进行切片上传
+      const { progress$, result$ } = this.chunkUploadService.uploadFile(
+        item.file,
+        this.BACKEND_URL_LOCAL,
+        {
+          provider: this.storageService.provider(),
+          bucket: this.storageService.provider() === 's3'
+            ? this.storageService.s3Config().bucket
+            : this.storageService.ossConfig().bucket,
+          region: this.storageService.provider() === 's3'
+            ? this.storageService.s3Config().region
+            : this.storageService.ossConfig().region,
+          chunkSize: 5 * 1024 * 1024 // 所有文件都使用 5MB 切片上传
+        }
+      );
 
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
-      }
+      // 订阅进度更新
+      // 上传进度（0-100%）映射到总进度的 0-30%
+      const progressSub = progress$.subscribe(progress => {
+        const uploadProgress = Math.round(progress.progress * 0.3); // 上传占 30%
+        this.updateItemProgress(index, uploadProgress);
+      });
+      this.uploadSubscriptions.push(progressSub);
 
-      const { job_id } = await uploadResponse.json();
-      this.updateItemProgress(index, 30);
-      this.updateItemStatus(index, 'processing', 30);
+      // 订阅结果
+      const resultSub = result$.subscribe(async result => {
+        if (result.status === 'completed') {
+          this.updateItemProgress(index, 30);
+          this.updateItemStatus(index, 'processing', 30);
+          await this.pollConversionStatus(index, result.jobId);
+        } else if (result.status === 'error') {
+          this.updateItemStatus(index, 'error', 0);
+          console.error('Upload error:', result.error);
+          alert(`上傳失敗: ${result.error}`);
+        }
+        
+        // 清理订阅
+        progressSub.unsubscribe();
+        resultSub.unsubscribe();
+        this.uploadSubscriptions = this.uploadSubscriptions.filter(
+          sub => sub !== progressSub && sub !== resultSub
+        );
+      });
+      this.uploadSubscriptions.push(resultSub);
 
-      await this.pollConversionStatus(index, job_id);
-    } catch (error) {
+    } catch (error: any) {
       this.updateItemStatus(index, 'error', 0);
       console.error('Upload error:', error);
+      alert(`上傳失敗: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -198,7 +229,7 @@ export class Upload {
 
     while (Date.now() - startTime < maxTimeout) {
       try {
-        const response = await fetch(`${this.BACKEND_URL}/api/status/${jobId}`, {
+        const response = await fetch(`${this.BACKEND_URL_LOCAL}/api/status/${jobId}`, {
           // 添加超時設置，避免單次請求卡住太久
           signal: AbortSignal.timeout(10000) // 10秒超時
         });

@@ -178,6 +178,13 @@
       >
         Diagnosis
       </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'performance'"
+        (click)="setTab('performance')"
+      >
+        Performance
+      </button>
     </div>
 
     <!-- Tab Content -->
@@ -247,6 +254,68 @@
               </button>
             </div>
           }
+        </div>
+      }
+
+      @if (activeTab() === 'performance') {
+        <div class="performance-panel">
+          <h4>Memory Management</h4>
+          
+          @if (showMemoryWarning) {
+            <div class="memory-warning">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <path d="M12 9v4M12 17h.01"/>
+              </svg>
+              <span>{{ memoryAdvice }}</span>
+            </div>
+          }
+
+          <div class="memory-stats">
+            <div class="stat-item">
+              <label>Estimated Memory:</label>
+              <span [class.warning]="showMemoryWarning">
+                {{ memoryStats.estimatedMemoryMB }} MB
+              </span>
+            </div>
+            <div class="stat-item">
+              <label>Tiles Loaded:</label>
+              <span>{{ memoryStats.tileCount }} / {{ memoryStats.maxCacheSize }}</span>
+            </div>
+            <div class="stat-item">
+              <label>Cache Usage:</label>
+              <span>{{ memoryStats.cacheUsagePercent }}%</span>
+            </div>
+            @if (memoryStats.lastCleanup) {
+              <div class="stat-item">
+                <label>Last Cleanup:</label>
+                <span>{{ formatCleanupTime(memoryStats.lastCleanup) }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="memory-actions">
+            <button class="cleanup-btn" (click)="cleanupMemory()" title="清理最旧的 tiles">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Clean Cache
+            </button>
+            <button class="force-cleanup-btn" (click)="forceCleanupMemory()" title="强制清理所有不可见的 tiles">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <path d="M10 11v6M14 11v6"/>
+              </svg>
+              Force Cleanup
+            </button>
+          </div>
+
+          <div class="memory-info">
+            <p class="info-text">
+              <strong>Memory Strategy:</strong> LRU (Least Recently Used) cache with automatic cleanup.
+              When memory exceeds 450 MB or tile count exceeds 2000, the oldest tiles are automatically removed.
+            </p>
+          </div>
         </div>
       }
     </div>
